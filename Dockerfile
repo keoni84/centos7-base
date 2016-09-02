@@ -41,18 +41,9 @@ RUN rpm --rebuilddb \
 	glibc-common \
 	gd \
 	gd-devel \
-	net-snmp \
-	openssl-devel \
-	perl-IO-Socket-SSL \
-	perl-devel \
-	perl-JSON \
-	perl-HTML \
-	perl-XML-Simple \
 	wget \
 	unzip \
 	make \
-	python-setuptools \
-	python-setuptools-devel \
 	&& rm -rf /var/cache/yum/* \
 	&& yum clean all
 
@@ -70,8 +61,7 @@ RUN rpm -ivh /tmp/epel-release-7-8.noarch.rpm
 # Install sshpass
 # -----------------------------------------------------------------------------
 RUN rpm --rebuilddb \
-	&& yum -y install sshpass perl-Nagios-Plugin \
-	&& yum -y erase epel-release-7-8 \
+	&& yum -y install sshpass \
 	&& rm -rf /var/cache/yum/* \
 	&& rm -rf /tmp/epel-release-7-8.noarch.rpm \
 	&& yum clean all
