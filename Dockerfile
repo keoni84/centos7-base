@@ -9,6 +9,9 @@ MAINTAINER John Headley <keoni84@gmail.com>
 
 ENV container docker
 
+# -----------------------------------------------------------------------------
+# Configure systemd
+# -----------------------------------------------------------------------------
 RUN (cd /lib/systemd/system/sysinit.target.wants/; for i in *; do [ $i == systemd-tmpfiles-setup.service ] || rm -f $i; done) \
 && rm -f /lib/systemd/system/multi-user.target.wants/* \
 && rm -f /etc/systemd/system/*.wants/* \
@@ -19,14 +22,10 @@ RUN (cd /lib/systemd/system/sysinit.target.wants/; for i in *; do [ $i == system
 rm -f /lib/systemd/system/anaconda.target.wants/*
 
 # -----------------------------------------------------------------------------
-# Import the RPM GPG keys for Centos Mirrors
+# Base software install
 # -----------------------------------------------------------------------------
-RUN rpm --import http://mirror.centos.org/centos/RPM-GPG-KEY-CentOS-7
-
-# -----------------------------------------------------------------------------
-# Base Install
-# -----------------------------------------------------------------------------
-RUN rpm --rebuilddb \
+RUN rpm --import http://mirror.centos.org/centos/RPM-GPG-KEY-CentOS-7 \
+&& rpm --rebuilddb \
 && yum -y install \
 vim-enhanced \
 sudo \
@@ -49,28 +48,16 @@ make \
 && yum clean all
 
 # -----------------------------------------------------------------------------
-# Copy files into place
+# Import epel Repository & install sshpass
+# Set timezone to UTC, configure sshd, set root password
 # -----------------------------------------------------------------------------
-ADD epel-release-7-8.noarch.rpm /tmp/
-
-# -----------------------------------------------------------------------------
-# Import epel Repository
-# -----------------------------------------------------------------------------
-RUN wget -O /tmp/epel-release-latest-7.noarch.rpm https://dl.fedoraproject.org/pub/epel/epel-release-latest-7.noarch.rpm
-
-# -----------------------------------------------------------------------------
-# Install sshpass
-# -----------------------------------------------------------------------------
-RUN rpm --rebuilddb \
+RUN wget -O /tmp/epel-release-latest-7.noarch.rpm https://dl.fedoraproject.org/pub/epel/epel-release-latest-7.noarch.rpm \
+&& rpm --rebuilddb \
 && yum -y install sshpass \
 && rm -rf /var/cache/yum/* \
 && rm -rf /tmp/epel-release-latest-7.noarch.rpm \
-&& yum clean all
-
-# -----------------------------------------------------------------------------
-# Set timezone to UTC, configure sshd, set root password
-# -----------------------------------------------------------------------------
-RUN ln -sf /usr/share/zoneinfo/UTC /etc/localtime \
+&& yum clean all \
+&& ln -sf /usr/share/zoneinfo/UTC /etc/localtime \
 && sed -i -e 's~^#UseDNS yes~UseDNS no~g' /etc/ssh/sshd_config \
 && systemctl enable sshd.service \
 && echo "root:P@ssw0rd" | chpasswd
